@@ -32,8 +32,8 @@ export default function ContactForm() {
 
     try {
       // Execute reCAPTCHA
-      const captchaToken = await executeRecaptcha('contact_form');
-      
+      const captchaToken = await executeRecaptcha("contact_form");
+
       if (!captchaToken) {
         setStatus("⚠️ reCAPTCHA verification failed.");
         setLoading(false);
@@ -59,7 +59,7 @@ export default function ContactForm() {
       if (result.text === "OK") {
         setStatus("✅ Message sent successfully!");
         form.current?.reset();
-        
+
         // Clear success message after 5 seconds
         setTimeout(() => setStatus(""), 5000);
       }
@@ -92,6 +92,13 @@ export default function ContactForm() {
         required
         className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
+      <input
+        type="number"
+        name="number"
+        placeholder="Your Phone Number"
+        required
+        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      />
 
       <textarea
         name="message"
@@ -110,11 +117,13 @@ export default function ContactForm() {
       </button>
 
       {status && (
-        <p 
+        <p
           className={`text-sm mt-2 ${
-            status.includes('✅') ? 'text-green-600' : 
-            status.includes('❌') ? 'text-red-600' : 
-            'text-yellow-600'
+            status.includes("✅")
+              ? "text-green-600"
+              : status.includes("❌")
+              ? "text-red-600"
+              : "text-yellow-600"
           }`}
         >
           {status}
