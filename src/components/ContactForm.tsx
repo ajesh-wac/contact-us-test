@@ -1,7 +1,7 @@
 "use client";
 import React, { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
-import ReCAPTCHA from "react-google-recaptcha";
+import { GoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function ContactForm() {
   const form = useRef<HTMLFormElement>(null);
@@ -89,7 +89,7 @@ const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
         rows={5}
       />
 
-      <ReCAPTCHA
+      <GoogleReCaptcha
         sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
         onChange={(token) => setCaptchaToken(token)}
       />
