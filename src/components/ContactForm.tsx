@@ -79,7 +79,7 @@ export default function ContactForm() {
     >
       <input
         type="text"
-        name="user_name"
+        name="name"
         placeholder="Your Name"
         required
         className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -87,7 +87,7 @@ export default function ContactForm() {
 
       <input
         type="email"
-        name="user_email"
+        name="email"
         placeholder="Your Email"
         required
         className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
