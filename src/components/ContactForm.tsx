@@ -1,19 +1,20 @@
+// src/components/ContactForm.tsx
 "use client";
 import React, { useRef, useState } from "react";
 import emailjs from "@emailjs/browser";
-import { GoogleReCaptcha } from "react-google-recaptcha-v3";
+import { useGoogleReCaptcha } from "react-google-recaptcha-v3";
 
 export default function ContactForm() {
   const form = useRef<HTMLFormElement>(null);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const { executeRecaptcha } = useGoogleReCaptcha();
 
-  const verifyCaptcha = async () => {
+  const verifyCaptcha = async (token: string) => {
     const res = await fetch("/api/verify-recaptcha", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: captchaToken }),
+      body: JSON.stringify({ token }),
     });
     return res.json();
   };
@@ -23,20 +24,31 @@ export default function ContactForm() {
     setStatus("");
     setLoading(true);
 
-    if (!captchaToken) {
-      setStatus("⚠️ Please complete the reCAPTCHA.");
-      setLoading(false);
-      return;
-    }
-
-    const verify = await verifyCaptcha();
-    if (!verify.success) {
-      setStatus("⚠️ reCAPTCHA failed, try again.");
+    if (!executeRecaptcha) {
+      setStatus("⚠️ reCAPTCHA not available. Please refresh the page.");
       setLoading(false);
       return;
     }
 
     try {
+      // Execute reCAPTCHA
+      const captchaToken = await executeRecaptcha('contact_form');
+      
+      if (!captchaToken) {
+        setStatus("⚠️ reCAPTCHA verification failed.");
+        setLoading(false);
+        return;
+      }
+
+      // Verify the token
+      const verify = await verifyCaptcha(captchaToken);
+      if (!verify.success) {
+        setStatus("⚠️ reCAPTCHA failed, try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Send email
       const result = await emailjs.sendForm(
         process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as string,
         process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID as string,
@@ -47,7 +59,9 @@ export default function ContactForm() {
       if (result.text === "OK") {
         setStatus("✅ Message sent successfully!");
         form.current?.reset();
-        setCaptchaToken(null);
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => setStatus(""), 5000);
       }
     } catch (error) {
       console.error("EmailJS Error:", error);
@@ -68,7 +82,7 @@ export default function ContactForm() {
         name="user_name"
         placeholder="Your Name"
         required
-        className="w-full border p-2 rounded"
+        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
 
       <input
@@ -76,30 +90,36 @@ export default function ContactForm() {
         name="user_email"
         placeholder="Your Email"
         required
-        className="w-full border p-2 rounded"
+        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
 
       <textarea
         name="message"
         placeholder="Your Message"
         required
-        className="w-full border p-2 rounded"
+        className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         rows={5}
-      />
-
-      <GoogleReCaptcha
-        onVerify={(token) => setCaptchaToken(token)}
       />
 
       <button
         type="submit"
         disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
         {loading ? "Sending..." : "Send Message"}
       </button>
 
-      {status && <p className="text-sm mt-2">{status}</p>}
+      {status && (
+        <p 
+          className={`text-sm mt-2 ${
+            status.includes('✅') ? 'text-green-600' : 
+            status.includes('❌') ? 'text-red-600' : 
+            'text-yellow-600'
+          }`}
+        >
+          {status}
+        </p>
+      )}
     </form>
   );
 }
