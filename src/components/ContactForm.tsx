@@ -9,55 +9,53 @@ export default function ContactForm() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
 
-const verifyCaptcha = async () => {
-  const res = await fetch("/api/verify-recaptcha", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token: captchaToken }),
-  });
-  return res.json();
-};
+  const verifyCaptcha = async () => {
+    const res = await fetch("/api/verify-recaptcha", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: captchaToken }),
+    });
+    return res.json();
+  };
 
-const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  setStatus("");
-  setLoading(true);
+  const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setStatus("");
+    setLoading(true);
 
-  if (!captchaToken) {
-    setStatus("⚠️ Please complete the reCAPTCHA.");
-    setLoading(false);
-    return;
-  }
-
-  const verify = await verifyCaptcha();
-  if (!verify.success) {
-    setStatus("⚠️ reCAPTCHA failed, try again.");
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const result = await emailjs.sendForm(
-      process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as string,
-      process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID as string,
-      form.current!,
-      process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as string
-    );
-    
-
-    if (result.text === "OK") {
-      setStatus("✅ Message sent successfully!");
-      form.current?.reset();
-      setCaptchaToken(null);
+    if (!captchaToken) {
+      setStatus("⚠️ Please complete the reCAPTCHA.");
+      setLoading(false);
+      return;
     }
-  } catch (error) {
-    console.error("EmailJS Error:", error);
-    setStatus("❌ Something went wrong. Please try again.");
-  }
 
-  setLoading(false);
-};
+    const verify = await verifyCaptcha();
+    if (!verify.success) {
+      setStatus("⚠️ reCAPTCHA failed, try again.");
+      setLoading(false);
+      return;
+    }
 
+    try {
+      const result = await emailjs.sendForm(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID as string,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID as string,
+        form.current!,
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY as string
+      );
+
+      if (result.text === "OK") {
+        setStatus("✅ Message sent successfully!");
+        form.current?.reset();
+        setCaptchaToken(null);
+      }
+    } catch (error) {
+      console.error("EmailJS Error:", error);
+      setStatus("❌ Something went wrong. Please try again.");
+    }
+
+    setLoading(false);
+  };
 
   return (
     <form
@@ -90,8 +88,7 @@ const sendEmail = async (e: React.FormEvent<HTMLFormElement>) => {
       />
 
       <GoogleReCaptcha
-        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}
-        onChange={(token) => setCaptchaToken(token)}
+        onVerify={(token) => setCaptchaToken(token)}
       />
 
       <button
